@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-do List</title>
+
+    <!-- CSS Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Fonts -->
+     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <h1 class="text-2xl font-bold">To-do List</h1>
+    </header>
+
+    <!-- Main Content Section -->
+    <main>
+        <!-- Form Section -->
+        <section>
+            <form>
+                <!-- To Do Input -->
+                <input type="text" id="task-input" placeholder="Add a new task...">
+                <!-- Date Input -->
+                <input type="date" id="task-date">
+            </form>
+
+            <!-- Submit Button -->
+                <button class="border rounded p-2 bg-green-500 text-white" onclick="addTodo()" type="button">Add
+                Task</button>
+            <h2>My Tasks</h2>
+            <ul id="task-list"></ul>
+        </section>
+    </main>
+</body>
+</html>
