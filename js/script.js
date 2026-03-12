@@ -2,7 +2,7 @@
    State
    ========================================= */
 let todos = JSON.parse(localStorage.getItem('priorify_todos')) || [];
-let currentView  = 'day';
+let currentView  = 'week';
 let currentFilter = 'all';
 let currentSort  = 'date-asc';
 let sortKey = 'date';   // 'date' | 'name' | 'priority'
@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateThemeIcon(true);
     }
 
-    switchMainView('day');
+    switchMainView('week');
     updateSortUI();
 });
 

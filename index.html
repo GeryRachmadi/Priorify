@@ -35,8 +35,8 @@
 
         <nav class="sidebar-nav">
             <p class="nav-label">Views</p>
-            <button class="nav-btn active" data-view="day"   onclick="switchMainView('day');   closeSidebar()"><i class="fas fa-sun"></i>           <span>Day</span></button>
-            <button class="nav-btn"        data-view="week"  onclick="switchMainView('week');  closeSidebar()"><i class="fas fa-calendar-week"></i>  <span>Week</span></button>
+            <button class="nav-btn" data-view="day"   onclick="switchMainView('day');   closeSidebar()"><i class="fas fa-calendar-day"></i>           <span>Day</span></button>
+            <button class="nav-btn active"        data-view="week"  onclick="switchMainView('week');  closeSidebar()"><i class="fas fa-calendar-week"></i>  <span>Week</span></button>
             <button class="nav-btn"        data-view="month" onclick="switchMainView('month'); closeSidebar()"><i class="fas fa-calendar-alt"></i>   <span>Month</span></button>
             <button class="nav-btn"        data-view="list"  onclick="switchMainView('list');  closeSidebar()"><i class="fas fa-list-ul"></i>        <span>List</span></button>
         </nav>
@@ -76,7 +76,7 @@
             </div>
             <div class="topbar-right">
                 <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle light/dark mode"><i class="fas fa-moon" id="themeIcon"></i></button>
-                <button class="view-toggle-btn" data-v="day"   onclick="switchMainView('day')">  <i class="fas fa-sun"></i>          <span>Day</span></button>
+                <button class="view-toggle-btn" data-v="day"   onclick="switchMainView('day')">  <i class="fas fa-calendar-day"></i>          <span>Day</span></button>
                 <button class="view-toggle-btn" data-v="week"  onclick="switchMainView('week')"> <i class="fas fa-calendar-week"></i> <span>Week</span></button>
                 <button class="view-toggle-btn" data-v="month" onclick="switchMainView('month')"><i class="fas fa-calendar-alt"></i>  <span>Month</span></button>
                 <button class="view-toggle-btn" data-v="list"  onclick="switchMainView('list')"> <i class="fas fa-list-ul"></i>       <span>List</span></button>
