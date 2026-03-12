@@ -3,123 +3,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Priorify - Simple To-Do List App</title>
-
-    <!-- CSS Styles -->
+    <title>Priorify - Smart To-Do Calendar</title>
+    <link rel="icon" href="image/priorify-logo.png">
     <link rel="stylesheet" href="css/style.css">
-    
-    <!-- Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <!-- Main Content Section -->
-    <main class="app-container">
-        <!-- Header Section -->
-        <header>
-            <div class="header-top">
-                <div>
-                    <!-- App Title -->
-                    <h1 class="app-title">Priorify</h1>
-                    <!-- Current Date -->
-                    <p id="dateDisplay">Loading Date...</p>
-                </div>
+<!-- Sidebar overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<div class="app-shell">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-top">
+            <div class="sidebar-brand">
+                <img src="image/priorify-logo.png" alt="" class="brand-logo" onerror="this.style.display='none'">
+                <span class="brand-icon-fb" id="brandIconFb" style="display:none"><i class="fas fa-layer-group"></i></span>
+                <span class="brand-name">Priorify</span>
             </div>
-
-            <!-- Navigation Bar / Control Section -->
-            <section class="control-wrapper">
-                <!-- Task Status -->
-                 <div class="task-status">
-                    <button class="status-button active" onclick="statusTasks('all')" data-filter="all">All</button>
-                    <button class="status-button" onclick="statusTasks('active')" data-filter="active">Ongoing</button>
-                    <button class="status-button" onclick="statusTasks('completed')" data-filter="completed">Completed</button>
-                </div>
-
-                <!-- Filter Task -->
-                 <div class="filter-task">
-                    <select id="sort-select" onchange="handleSort(this.value)" aria-label="Sort Tasks">
-                        <option value="date-asc">Closest Deadline</option>
-                        <option value="date-desc">Furthest Deadline</option>
-                        <option value="name-asc">Name A-Z</option>
-                        <option value="name-desc">Name Z-A</option>
-                    </select>
-                </div>
-            </section>
-        </header>
-
-        <!-- Task List Section -->
-        <section class="task-list-container">
-            <!-- Empty List/State -->
-            <div id="emptyState" class="empty-state">
-                <!-- font-awesome-solid font-awesome-clipboard-list -->
-                <i class="fas fa-clipboard-list"></i>
-                <p>No tasks available. Add a new task to get started!</p>
-            </div> 
-
-            <!-- List Elements -->
-            <ul id="taskList">
-                <!-- JavaScript inject List Item -->
-            </ul>
-        </section>
-
-        <!-- Floating Action Button New Task Button -->
-        <div class="fab-wrapper">
-            <button class="fab-button" onclick="openPopup()" aria-label="Add New Task">
-                <i class="fas fa-plus"></i>
-            </button>
+            <button class="sidebar-close-btn" onclick="closeSidebar()"><i class="fas fa-times"></i></button>
         </div>
-    </main>
 
-    <!-- Modal / Popup Form Section for Adding New Task Form-->
-    <div id="taskPopup" class="popup" role="dialog" aria-modal="true">
-        <div class="popup-content">
-            <!-- Popup Header -->
-            <div class="popup-header">
-                <h3 id="popupTitle">Add New Task</h3>
-                <button class="close-button" onclick="closePopup()" aria-label="Close Popup">
-                    <i class="fas fa-times"></i>
-                </button>
+        <button class="sidebar-add-btn" onclick="openPopup(); closeSidebar()">
+            <i class="fas fa-plus"></i> <span>New Task</span>
+        </button>
+
+        <div class="sidebar-divider"></div>
+
+        <nav class="sidebar-nav">
+            <p class="nav-label">Views</p>
+            <button class="nav-btn active" data-view="day"   onclick="switchMainView('day');   closeSidebar()"><i class="fas fa-sun"></i>           <span>Day</span></button>
+            <button class="nav-btn"        data-view="week"  onclick="switchMainView('week');  closeSidebar()"><i class="fas fa-calendar-week"></i>  <span>Week</span></button>
+            <button class="nav-btn"        data-view="month" onclick="switchMainView('month'); closeSidebar()"><i class="fas fa-calendar-alt"></i>   <span>Month</span></button>
+            <button class="nav-btn"        data-view="list"  onclick="switchMainView('list');  closeSidebar()"><i class="fas fa-list-ul"></i>        <span>List</span></button>
+        </nav>
+
+        <div class="sidebar-divider"></div>
+
+        <nav class="sidebar-nav">
+            <p class="nav-label">Filter</p>
+            <button class="nav-btn filter-btn active" data-filter="all"       onclick="setFilter('all');       closeSidebar()"><i class="fas fa-inbox"></i>              <span>All Tasks</span></button>
+            <button class="nav-btn filter-btn"        data-filter="active"    onclick="setFilter('active');    closeSidebar()"><i class="fas fa-circle-half-stroke"></i> <span>Ongoing</span></button>
+            <button class="nav-btn filter-btn"        data-filter="completed" onclick="setFilter('completed'); closeSidebar()"><i class="fas fa-check-circle"></i>       <span>Completed</span></button>
+        </nav>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="priority-legend">
+            <p class="nav-label">Priority</p>
+            <div class="legend-item"><span class="dot p-someday"></span>   <span>Someday</span></div>
+            <div class="legend-item"><span class="dot p-nice"></span>      <span>Nice to Have</span></div>
+            <div class="legend-item"><span class="dot p-normal"></span>    <span>Normal</span></div>
+            <div class="legend-item"><span class="dot p-important"></span> <span>Important</span></div>
+            <div class="legend-item"><span class="dot p-urgent"></span>    <span>URGENT!</span></div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <!-- TOPBAR -->
+        <div class="topbar">
+            <div class="topbar-left">
+                <button class="hamburger-btn" onclick="openSidebar()" aria-label="Menu"><i class="fas fa-bars"></i></button>
+                <button class="nav-arrow" onclick="navigatePrev()"><i class="fas fa-chevron-left"></i></button>
+                <button class="nav-arrow" onclick="navigateNext()"><i class="fas fa-chevron-right"></i></button>
+                <button class="today-btn" onclick="goToToday()">Today</button>
+                <h2 class="topbar-title" id="topbarTitle"></h2>
+            </div>
+            <div class="topbar-right">
+                <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle light/dark mode"><i class="fas fa-moon" id="themeIcon"></i></button>
+                <button class="view-toggle-btn" data-v="day"   onclick="switchMainView('day')">  <i class="fas fa-sun"></i>          <span>Day</span></button>
+                <button class="view-toggle-btn" data-v="week"  onclick="switchMainView('week')"> <i class="fas fa-calendar-week"></i> <span>Week</span></button>
+                <button class="view-toggle-btn" data-v="month" onclick="switchMainView('month')"><i class="fas fa-calendar-alt"></i>  <span>Month</span></button>
+                <button class="view-toggle-btn" data-v="list"  onclick="switchMainView('list')"> <i class="fas fa-list-ul"></i>       <span>List</span></button>
+            </div>
+        </div>
+
+        <!-- DAY VIEW -->
+        <div id="view-day" class="view-panel active">
+            <div class="day-view-header" id="dayViewHeader"></div>
+            <div class="day-timeline" id="dayTimeline"></div>
+        </div>
+
+        <!-- WEEK VIEW -->
+        <div id="view-week" class="view-panel">
+            <div class="week-wrapper">
+                <div class="week-header-row" id="weekHeaderRow"></div>
+                <div class="week-scroll" id="weekScroll">
+                    <div class="week-grid" id="weekGrid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MONTH VIEW -->
+        <div id="view-month" class="view-panel">
+            <div class="month-dow-row" id="monthDowRow"></div>
+            <div class="month-grid" id="monthGrid"></div>
+        </div>
+
+        <!-- LIST VIEW -->
+        <div id="view-list" class="view-panel">
+            <div class="list-toolbar">
+                <div class="sort-group">
+                    <span class="sort-group-label">Sort by:</span>
+                    <div class="sort-btn-group">
+                        <button class="sort-seg active" data-sort-key="date" onclick="setSortKey('date')">
+                            <i class="fas fa-calendar sort-dir-icon" id="icon-date"></i> Deadline
+                        </button>
+                        <button class="sort-seg" data-sort-key="name" onclick="setSortKey('name')">
+                            <i class="fas fa-arrow-down-a-z sort-dir-icon" id="icon-name"></i> Name
+                        </button>
+                        <button class="sort-seg" data-sort-key="priority" onclick="setSortKey('priority')">
+                            <i class="fas fa-flag sort-dir-icon" id="icon-priority"></i> Priority
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="list-empty" id="listEmpty">
+                <i class="fas fa-clipboard-list"></i>
+                <p>No tasks here. Add one!</p>
+            </div>
+            <ul class="task-list" id="taskList"></ul>
+        </div>
+
+    </main>
+</div>
+
+<!-- ADD / EDIT TASK MODAL -->
+<div id="taskPopup" class="popup" role="dialog" aria-modal="true">
+    <div class="popup-content">
+        <div class="popup-header">
+            <h3 id="popupTitle">New Task</h3>
+            <button class="close-btn" onclick="closePopup()"><i class="fas fa-times"></i></button>
+        </div>
+        <form id="taskForm" onsubmit="handleFormSubmit(event)">
+            <input type="hidden" id="taskId">
+
+            <div class="form-group">
+                <label for="taskName">Task / Event Name</label>
+                <input type="text" id="taskName" class="form-control" placeholder="What needs to be done?" autocomplete="off">
+                <p class="error-msg" id="nameError">Name cannot be empty.</p>
             </div>
 
-            <!-- Task Input Form -->
-            <form id="taskForm" onsubmit="handleFormSubmit(event)">
-                <!-- (For Edit) Hidden Input Task ID -->
-                <input type="hidden" id="taskId">
+            <div class="form-group">
+                <label for="taskDueDate">Date</label>
+                <input type="date" id="taskDueDate" class="form-control">
+            </div>
 
-                <!-- Task Name Input Group -->
+            <div class="form-row two-col">
                 <div class="form-group">
-                    <label for="taskName">Task Name</label>
-                    <input type="text" id="taskName" class="form-control" placeholder="What do you want to accomplish?" required>
-                    <!-- Error Message if Task Name is Empty -->
-                    <p class="error-message" id="nameError">Task name cannot be empty.</p>
+                    <label for="taskStartTime">Start Time <span class="optional-tag">optional</span></label>
+                    <input type="time" id="taskStartTime" class="form-control">
                 </div>
-
-                <!-- Task Due Date -->
                 <div class="form-group">
-                    <label for="taskDueDate">Due Date</label>
-                    <input type="date" id="taskDueDate" class="form-control">
+                    <label for="taskEndTime">End Time <span class="optional-tag">optional</span></label>
+                    <input type="time" id="taskEndTime" class="form-control">
                 </div>
+            </div>
 
-                <!-- Form Action Buttons -->
-                <div class="button-group">
-                    <button type="submit" class="button button-save">Add Task</button>
-                    <button type="button" class="button button-cancel" onclick="closePopup()">Cancel</button>
+            <div class="form-group">
+                <label>Priority</label>
+                <div class="priority-picker">
+                    <button type="button" class="prio-opt p-someday"      data-priority="someday"   onclick="selectPriority('someday')">Someday</button>
+                    <button type="button" class="prio-opt p-nice"         data-priority="nice"      onclick="selectPriority('nice')">Nice to Have</button>
+                    <button type="button" class="prio-opt p-normal active" data-priority="normal"   onclick="selectPriority('normal')">Normal</button>
+                    <button type="button" class="prio-opt p-important"    data-priority="important" onclick="selectPriority('important')">Important</button>
+                    <button type="button" class="prio-opt p-urgent"       data-priority="urgent"    onclick="selectPriority('urgent')">URGENT!</button>
                 </div>
-            </form>
+                <input type="hidden" id="taskPriority" value="normal">
+            </div>
+
+            <div class="form-row two-col">
+                <button type="submit" class="btn btn-save">Save</button>
+                <button type="button" class="btn btn-cancel" onclick="closePopup()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- TASK DETAIL POPUP -->
+<div id="taskDetail" class="popup">
+    <div class="popup-content detail-content">
+        <div class="popup-header">
+            <h3 id="detailTitle">Task Details</h3>
+            <button class="close-btn" onclick="closeDetail()"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="detailBody"></div>
+        <div class="detail-actions">
+            <button class="btn btn-save"   onclick="editFromDetail()"><i class="fas fa-pen"></i> Edit</button>
+            <button class="btn btn-danger" onclick="deleteFromDetail()"><i class="fas fa-trash"></i> Delete</button>
         </div>
     </div>
+</div>
 
-    <!-- Footer Section -->
-    <footer>
-        <p class="copyright-text">
-            2026 Simple Todo App - by gryrchmd
-        </p>
-    </footer>
-
-    <!-- JavaScript File -->
-    <script src="js/script.js"></script>
+<script src="js/script.js"></script>
 </body>
 </html>
