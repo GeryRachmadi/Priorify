@@ -6,7 +6,7 @@ A lightweight, responsive, and persistent Task Manager application built using *
 
 👇 Give it a try!
 
-🔗 [Click this link](https://geryrachmadi.github.io/CodingCamp-19Jan26-Geresidi/)
+🔗 [Click this link](https://geryrachmadi.github.io/Priorify/)
 
 ![Project Status](https://img.shields.io/badge/Status-Completed-success)
 ![License](https://img.shields.io/badge/License-MIT-blue)
