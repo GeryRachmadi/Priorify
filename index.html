@@ -133,46 +133,82 @@
     </main>
 </div>
 
-<!-- ADD / EDIT TASK MODAL -->
+<!-- ADD / EDIT MODAL -->
 <div id="taskPopup" class="popup" role="dialog" aria-modal="true">
     <div class="popup-content">
         <div class="popup-header">
-            <h3 id="popupTitle">New Task</h3>
+            <h3 id="popupTitle">New</h3>
             <button class="close-btn" onclick="closePopup()"><i class="fas fa-times"></i></button>
         </div>
+
+        <!-- Type Toggle (hidden when editing) -->
+        <div class="type-toggle" id="typeToggle">
+            <button type="button" class="type-btn active" id="typeBtnTask" onclick="selectType('task')">
+                <i class="fas fa-check-square"></i> Task
+            </button>
+            <button type="button" class="type-btn" id="typeBtnEvent" onclick="selectType('event')">
+                <i class="fas fa-calendar-dot"></i> Event
+            </button>
+        </div>
+        <input type="hidden" id="itemType" value="task">
+
         <form id="taskForm" onsubmit="handleFormSubmit(event)">
             <input type="hidden" id="taskId">
 
+            <!-- Name -->
             <div class="form-group">
-                <label for="taskName">Task / Event Name</label>
+                <label for="taskName" id="labelName">Task Name</label>
                 <input type="text" id="taskName" class="form-control" placeholder="What needs to be done?" autocomplete="off">
                 <p class="error-msg" id="nameError">Name cannot be empty.</p>
             </div>
 
+            <!-- Date -->
             <div class="form-group">
-                <label for="taskDueDate">Date</label>
+                <label for="taskDueDate" id="labelDate">Deadline Date</label>
                 <input type="date" id="taskDueDate" class="form-control">
             </div>
 
-            <div class="form-row two-col">
+            <!-- TASK: single deadline time (optional) -->
+            <div class="form-group" id="taskTimeGroup">
+                <label for="taskDeadlineTime">Deadline Time <span class="optional-tag">optional</span></label>
+                <input type="time" id="taskDeadlineTime" class="form-control">
+            </div>
+
+            <!-- EVENT: start + end time (required) -->
+            <div class="form-row two-col" id="eventTimeGroup" style="display:none">
                 <div class="form-group">
-                    <label for="taskStartTime">Start Time <span class="optional-tag">optional</span></label>
+                    <label for="taskStartTime">Start Time</label>
                     <input type="time" id="taskStartTime" class="form-control">
+                    <p class="error-msg" id="startTimeError">Start time required.</p>
                 </div>
                 <div class="form-group">
-                    <label for="taskEndTime">End Time <span class="optional-tag">optional</span></label>
+                    <label for="taskEndTime">End Time</label>
                     <input type="time" id="taskEndTime" class="form-control">
+                    <p class="error-msg" id="endTimeError">End time required.</p>
                 </div>
             </div>
 
+            <!-- Location (event only) -->
+            <div class="form-group" id="locationGroup" style="display:none">
+                <label for="taskLocation">Location <span class="optional-tag">optional</span></label>
+                <input type="text" id="taskLocation" class="form-control" placeholder="Where is this happening?" autocomplete="off">
+            </div>
+
+            <!-- Description (both) -->
+            <div class="form-group">
+                <label for="taskDesc">Description <span class="optional-tag">optional</span></label>
+                <textarea id="taskDesc" class="form-control form-textarea" placeholder="Add notes or details..."></textarea>
+            </div>
+
+            <!-- Priority -->
             <div class="form-group">
                 <label>Priority</label>
                 <div class="priority-picker">
-                    <button type="button" class="prio-opt p-someday"      data-priority="someday"   onclick="selectPriority('someday')">Someday</button>
-                    <button type="button" class="prio-opt p-nice"         data-priority="nice"      onclick="selectPriority('nice')">Nice to Have</button>
-                    <button type="button" class="prio-opt p-normal active" data-priority="normal"   onclick="selectPriority('normal')">Normal</button>
-                    <button type="button" class="prio-opt p-important"    data-priority="important" onclick="selectPriority('important')">Important</button>
-                    <button type="button" class="prio-opt p-urgent"       data-priority="urgent"    onclick="selectPriority('urgent')">URGENT!</button>
+                    <button type="button" class="prio-opt p-someday"       data-priority="someday"   onclick="selectPriority('someday')">Someday</button>
+                    <button type="button" class="prio-opt p-nice"          data-priority="nice"      onclick="selectPriority('nice')">Nice to Have</button>
+                    <button type="button" class="prio-opt p-normal active"  data-priority="normal"   onclick="selectPriority('normal')">Normal</button>
+                    <button type="button" class="prio-opt p-important"     data-priority="important" onclick="selectPriority('important')">Important</button>
+                    <button type="button" class="prio-opt p-urgent"        data-priority="urgent"    onclick="selectPriority('urgent')">URGENT!</button>
                 </div>
                 <input type="hidden" id="taskPriority" value="normal">
             </div>

@@ -168,8 +168,8 @@ function renderDayView() {
     const TIME_COL = 56; // must match --time-col
 
     const dayTasks     = getFilteredTodos().filter(t => t.date && isSameDay(new Date(t.date + 'T00:00:00'), currentDate));
-    const timedTasks   = dayTasks.filter(t => t.startTime);
-    const untimedTasks = dayTasks.filter(t => !t.startTime);
+    const timedTasks   = dayTasks.filter(t => t.type === 'event' ? t.startTime : t.deadlineTime);
+    const untimedTasks = dayTasks.filter(t => t.type === 'event' ? !t.startTime : !t.deadlineTime);
 
     header.innerHTML = `<i class="fas fa-tasks" style="margin-right:6px"></i>${dayTasks.length} task${dayTasks.length !== 1 ? 's' : ''} on this day`;
 
@@ -216,18 +216,19 @@ function renderDayView() {
 
     // Draw event/task blocks absolutely
     timedTasks.forEach(t => {
-        const [sh, sm] = t.startTime.split(':').map(Number);
+        const isEvent = t.type === 'event';
+        const timeRef = isEvent ? t.startTime : t.deadlineTime;
+        const [sh, sm] = timeRef.split(':').map(Number);
         const startFrac = sh + sm / 60;
 
-        let durationH = 1; // default 1h for tasks with only start time
-        if (t.endTime) {
+        let durationH = 0.5; // tasks are half-hour tall by default
+        if (isEvent && t.endTime) {
             const [eh, em] = t.endTime.split(':').map(Number);
             durationH = Math.max(0.25, (eh + em / 60) - startFrac);
         }
 
         const top    = startFrac * ROW_H;
         const height = durationH * ROW_H;
-        const isEvent = !!t.endTime;
 
         const block = document.createElement('div');
         block.className = `event-block-abs p-${t.priority || 'normal'} ${t.completed ? 'completed-chip' : ''}`;
@@ -235,13 +236,9 @@ function renderDayView() {
         block.style.height = `${height}px`;
 
         if (isEvent) {
-            block.innerHTML = `
-                <div class="ebl-time">${formatTime(t.startTime)} – ${formatTime(t.endTime)}</div>
-                <div class="ebl-title">${escapeHtml(t.text)}</div>`;
+            block.innerHTML = `<div class="ebl-time"><i class="fas fa-calendar-check" style="font-size:9px;margin-right:4px"></i>${formatTime(t.startTime)}${t.endTime ? ' – ' + formatTime(t.endTime) : ''}</div><div class="ebl-title">${escapeHtml(t.text)}</div>`;
         } else {
-            block.innerHTML = `
-                <div class="ebl-time">${formatTime(t.startTime)}</div>
-                <div class="ebl-title">${escapeHtml(t.text)}</div>`;
+            block.innerHTML = `<div class="ebl-time"><i class="fas fa-check-square" style="font-size:9px;margin-right:4px"></i>${formatTime(t.deadlineTime)}</div><div class="ebl-title">${escapeHtml(t.text)}</div>`;
         }
 
         block.addEventListener('click', () => openDetail(t.id));
@@ -318,11 +315,11 @@ function renderWeekView() {
         col.className = isSameDay(d, new Date()) ? 'wdc-today' : '';
 
         filteredTodos
-            .filter(t => t.date && !t.startTime && isSameDay(new Date(t.date + 'T00:00:00'), d))
+            .filter(t => t.date && !(t.type === 'event' ? t.startTime : t.deadlineTime) && isSameDay(new Date(t.date + 'T00:00:00'), d))
             .forEach(t => col.appendChild(makeChip(t)));
 
         col.addEventListener('click', e => {
-            if (e.target === col) openPopupWithDateTime(toDateInputVal(d), '', '');
+            if (e.target === col) openPopupWithDateTime(toDateInputVal(d), '', '', 'task');
         });
         allDayStrip.appendChild(col);
     });
@@ -359,7 +356,7 @@ function renderWeekView() {
         for (let h = 0; h < 24; h++) {
             const slot = document.createElement('div');
             slot.style.cssText = `position:absolute;top:${h * ROW_H}px;left:0;right:0;height:${ROW_H}px;border-top:1px solid var(--border);cursor:pointer;box-sizing:border-box;`;
-            slot.addEventListener('click', () => openPopupWithDateTime(toDateInputVal(d), `${pad(h)}:00`, ''));
+            slot.addEventListener('click', () => openPopupWithDateTime(toDateInputVal(d), `${pad(h)}:00`, `${pad(h+1)}:00`, 'event'));
             slot.addEventListener('mouseenter', () => slot.style.background = 'rgba(79,110,247,0.04)');
             slot.addEventListener('mouseleave', () => slot.style.background = '');
             dayCol.appendChild(slot);
@@ -367,28 +364,29 @@ function renderWeekView() {
 
         // Timed tasks/events as absolute blocks
         filteredTodos
-            .filter(t => t.date && t.startTime && isSameDay(new Date(t.date + 'T00:00:00'), d))
+            .filter(t => t.date && (t.type === 'event' ? t.startTime : t.deadlineTime) && isSameDay(new Date(t.date + 'T00:00:00'), d))
             .forEach(t => {
-                const [sh, sm] = t.startTime.split(':').map(Number);
+                const isEvent = t.type === 'event';
+                const timeRef = isEvent ? t.startTime : t.deadlineTime;
+                const [sh, sm] = timeRef.split(':').map(Number);
                 const startFrac = sh + sm / 60;
-                let durationH = 1;
-                if (t.endTime) {
+                let durationH = 0.5;
+                if (isEvent && t.endTime) {
                     const [eh, em] = t.endTime.split(':').map(Number);
                     durationH = Math.max(0.25, (eh + em / 60) - startFrac);
                 }
 
                 const block = document.createElement('div');
                 block.className = `event-block-abs p-${t.priority || 'normal'} ${t.completed ? 'completed-chip' : ''}`;
-                // Override left/right for week columns (fill the column)
                 block.style.left   = '2px';
                 block.style.right  = '2px';
                 block.style.top    = `${startFrac * ROW_H}px`;
                 block.style.height = `${durationH * ROW_H}px`;
 
-                if (t.endTime) {
-                    block.innerHTML = `<div class="ebl-time">${formatTime(t.startTime)}–${formatTime(t.endTime)}</div><div class="ebl-title">${escapeHtml(t.text)}</div>`;
+                if (isEvent) {
+                    block.innerHTML = `<div class="ebl-time"><i class="fas fa-calendar-check" style="font-size:9px;margin-right:3px"></i>${formatTime(t.startTime)}${t.endTime ? '–' + formatTime(t.endTime) : ''}</div><div class="ebl-title">${escapeHtml(t.text)}</div>`;
                 } else {
-                    block.innerHTML = `<div class="ebl-time">${formatTime(t.startTime)}</div><div class="ebl-title">${escapeHtml(t.text)}</div>`;
+                    block.innerHTML = `<div class="ebl-time"><i class="fas fa-check-square" style="font-size:9px;margin-right:3px"></i>${formatTime(t.deadlineTime)}</div><div class="ebl-title">${escapeHtml(t.text)}</div>`;
                 }
 
                 block.addEventListener('click', e => { e.stopPropagation(); openDetail(t.id); });
@@ -496,28 +494,34 @@ function renderListView() {
 
     filtered.forEach(t => {
         const li = document.createElement('li');
+        const isEvent = t.type === 'event';
         li.className = `task-item p-${t.priority || 'normal'} ${t.completed ? 'completed' : ''}`;
 
         const dateStr  = t.date ? new Date(t.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
-        const startStr = t.startTime ? formatTime(t.startTime) : '';
-        const endStr   = t.endTime   ? formatTime(t.endTime)   : '';
-        const timeStr  = startStr ? (endStr ? `${startStr} – ${endStr}` : startStr) : '';
+        let timeStr = '';
+        if (isEvent && t.startTime) timeStr = formatTime(t.startTime) + (t.endTime ? ' – ' + formatTime(t.endTime) : '');
+        else if (!isEvent && t.deadlineTime) timeStr = formatTime(t.deadlineTime);
         const isOverdue = !t.completed && t.date && new Date(t.date + 'T00:00:00') < new Date().setHours(0,0,0,0);
 
         li.innerHTML = `
-            <div class="task-checkbox ${t.completed ? 'checked' : ''}" onclick="toggleComplete('${t.id}'); event.stopPropagation()">
-                ${t.completed ? '<i class="fas fa-check"></i>' : ''}
+            <div class="task-checkbox ${isEvent ? 'event-checkbox' : ''} ${t.completed ? 'checked' : ''}" onclick="${isEvent ? '' : `toggleComplete('${t.id}'); event.stopPropagation()`}">
+                ${isEvent ? '<i class="fas fa-calendar-check" style="font-size:10px"></i>' : (t.completed ? '<i class="fas fa-check"></i>' : '')}
             </div>
             <div class="task-body">
-                <div class="task-name">${escapeHtml(t.text)}</div>
+                <div class="task-name">
+                    ${escapeHtml(t.text)}
+                    <span class="type-badge type-${isEvent ? 'event' : 'task'}" style="margin-left:6px;vertical-align:middle">${isEvent ? 'Event' : 'Task'}</span>
+                </div>
                 <div class="task-meta">
                     <span class="${isOverdue ? 'overdue' : ''}">
                         <i class="far fa-calendar"></i> ${dateStr}
                         ${timeStr ? `<i class="far fa-clock" style="margin-left:6px"></i> ${timeStr}` : ''}
                         ${isOverdue ? ' · Overdue' : ''}
                     </span>
+                    ${t.location ? `<span><i class="fas fa-location-dot" style="margin-right:3px;opacity:.6"></i>${escapeHtml(t.location)}</span>` : ''}
                     <span class="priority-badge p-${t.priority || 'normal'}">${PRIORITY_LABELS[t.priority] || 'Normal'}</span>
                 </div>
+                ${t.desc ? `<div style="font-size:12px;color:var(--text-muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px;">${escapeHtml(t.desc)}</div>` : ''}
             </div>
             <div class="task-actions">
                 <button class="act-btn"     onclick="openEditPopup('${t.id}'); event.stopPropagation()" title="Edit"><i class="fas fa-pen"></i></button>
@@ -530,57 +534,42 @@ function renderListView() {
 }
 
 /* =========================================
-   Task Chip Builder (Day & Week)
+   Task/Event Chip Builder (Day & Week all-day row)
    ========================================= */
 function makeChip(todo) {
     const chip = document.createElement('div');
-    const isEvent = todo.startTime && todo.endTime;
-    chip.className = `task-chip p-${todo.priority || 'normal'} ${todo.completed ? 'completed-chip' : ''} ${isEvent ? 'event-block' : ''}`;
+    const isEvent = todo.type === 'event';
+    chip.className = `task-chip p-${todo.priority || 'normal'} ${todo.completed ? 'completed-chip' : ''}`;
+    chip.style.display = 'flex';
 
     if (isEvent) {
-        // Block layout
-        const timeRow = document.createElement('div');
-        timeRow.style.cssText = 'display:flex;align-items:center;gap:5px;width:100%';
-
-        const chk = makeCheckEl(todo);
-        timeRow.appendChild(chk);
-
-        const timeEl = document.createElement('span');
-        timeEl.className = 'chip-time';
-        timeEl.textContent = `${formatTime(todo.startTime)} – ${formatTime(todo.endTime)}`;
-        timeRow.appendChild(timeEl);
-
-        chip.appendChild(timeRow);
-
-        const labelEl = document.createElement('div');
-        labelEl.className = 'chip-label';
-        labelEl.style.cssText = 'font-size:11.5px;width:100%;padding-left:18px';
-        labelEl.textContent = todo.text;
-        chip.appendChild(labelEl);
+        // Static calendar icon for events
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-calendar-check chip-type-icon';
+        icon.style.cssText = 'font-size:10px;flex-shrink:0;opacity:0.75;margin-right:1px;';
+        chip.appendChild(icon);
     } else {
-        // Inline layout
-        chip.style.display = 'flex';
-
+        // Interactive check circle for tasks
         const chk = makeCheckEl(todo);
         chip.appendChild(chk);
-
-        if (todo.startTime) {
-            const timeEl = document.createElement('span');
-            timeEl.className = 'chip-time';
-            timeEl.textContent = formatTime(todo.startTime);
-            chip.appendChild(timeEl);
-        }
-
-        const labelEl = document.createElement('span');
-        labelEl.className = 'chip-label';
-        labelEl.textContent = todo.text;
-        chip.appendChild(labelEl);
     }
+
+    // Time label for tasks with deadlineTime
+    if (!isEvent && todo.deadlineTime) {
+        const timeEl = document.createElement('span');
+        timeEl.className = 'chip-time';
+        timeEl.textContent = formatTime(todo.deadlineTime);
+        chip.appendChild(timeEl);
+    }
+
+    const labelEl = document.createElement('span');
+    labelEl.className = 'chip-label';
+    labelEl.textContent = todo.text;
+    chip.appendChild(labelEl);
 
     chip.addEventListener('click', e => {
         if (!e.target.closest('.chip-check')) openDetail(todo.id);
     });
-
     return chip;
 }
 
@@ -600,20 +589,27 @@ function openDetail(id) {
     if (!t) return;
     detailTaskId = id;
 
-    const dateStr  = t.date ? new Date(t.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) : 'No date';
-    const startStr = t.startTime ? formatTime(t.startTime) : null;
-    const endStr   = t.endTime   ? formatTime(t.endTime)   : null;
-    const timeStr  = startStr ? (endStr ? `${startStr} – ${endStr}` : `Starts ${startStr}`) : 'No time set';
+    const isEvent = t.type === 'event';
+    const dateStr = t.date ? new Date(t.date + 'T00:00:00').toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' }) : 'No date';
     const isOverdue = !t.completed && t.date && new Date(t.date + 'T00:00:00') < new Date().setHours(0,0,0,0);
 
-    document.getElementById('detailTitle').textContent = t.text;
+    let timeStr = '';
+    if (isEvent && t.startTime) timeStr = formatTime(t.startTime) + (t.endTime ? ' – ' + formatTime(t.endTime) : '');
+    else if (!isEvent && t.deadlineTime) timeStr = formatTime(t.deadlineTime);
+
+    document.getElementById('detailTitle').textContent = isEvent ? 'Event Details' : 'Task Details';
     document.getElementById('detailBody').innerHTML = `
         <div class="detail-title">${escapeHtml(t.text)}</div>
-        <div style="margin-top:10px;display:flex;flex-direction:column;gap:7px;">
+        <div style="margin-top:4px;margin-bottom:10px;">
+            <span class="type-badge type-${isEvent ? 'event' : 'task'}">${isEvent ? '⬤ Event' : '☐ Task'}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
             <div><i class="far fa-calendar" style="width:16px;margin-right:7px;opacity:.6"></i>${dateStr}${isOverdue ? ' <span style="color:var(--p-urgent);font-size:11px">· Overdue</span>' : ''}</div>
-            <div><i class="far fa-clock" style="width:16px;margin-right:7px;opacity:.6"></i>${timeStr}</div>
+            ${timeStr ? `<div><i class="far fa-clock" style="width:16px;margin-right:7px;opacity:.6"></i>${timeStr}</div>` : ''}
+            ${t.location ? `<div><i class="fas fa-location-dot" style="width:16px;margin-right:7px;opacity:.6"></i>${escapeHtml(t.location)}</div>` : ''}
             <div><i class="fas fa-flag" style="width:16px;margin-right:7px;opacity:.6"></i><span class="priority-badge p-${t.priority || 'normal'}">${PRIORITY_LABELS[t.priority] || 'Normal'}</span></div>
             <div><i class="fas fa-circle-half-stroke" style="width:16px;margin-right:7px;opacity:.6"></i>${t.completed ? 'Completed ✓' : 'Ongoing'}</div>
+            ${t.desc ? `<div style="margin-top:6px;padding:10px;background:var(--surface2);border-radius:8px;line-height:1.6;white-space:pre-wrap;font-size:13px;">${escapeHtml(t.desc)}</div>` : ''}
         </div>`;
     document.getElementById('taskDetail').classList.add('active');
 }
@@ -693,39 +689,94 @@ function deleteTodo(id) {
 /* =========================================
    Form / Modal
    ========================================= */
-function openPopupWithDateTime(dateVal, startTime, endTime) {
-    document.getElementById('popupTitle').textContent = 'New Task';
+let currentItemType = 'task'; // 'task' | 'event'
+
+function selectType(type) {
+    currentItemType = type;
+    document.getElementById('itemType').value = type;
+
+    const isEvent = type === 'event';
+
+    // Toggle button styles
+    document.getElementById('typeBtnTask').classList.toggle('active', !isEvent);
+    document.getElementById('typeBtnEvent').classList.toggle('active', isEvent);
+    document.getElementById('typeBtnEvent').classList.toggle('event-active', isEvent);
+
+    // Show/hide fields
+    document.getElementById('taskTimeGroup').style.display  = isEvent ? 'none' : '';
+    document.getElementById('eventTimeGroup').style.display = isEvent ? '' : 'none';
+    document.getElementById('locationGroup').style.display  = isEvent ? '' : 'none';
+
+    // Update labels & placeholder
+    document.getElementById('labelName').textContent  = isEvent ? 'Event Name' : 'Task Name';
+    document.getElementById('labelDate').textContent  = isEvent ? 'Date' : 'Deadline Date';
+    document.getElementById('taskName').placeholder   = isEvent ? 'What is this event?' : 'What needs to be done?';
+
+    // Update popup title
+    if (!isEditing) {
+        document.getElementById('popupTitle').textContent = isEvent ? 'New Event' : 'New Task';
+    }
+}
+
+function openPopupWithDateTime(dateVal, startTime, endTime, type = 'task') {
     document.getElementById('taskForm').reset();
-    document.getElementById('taskId').value        = '';
-    document.getElementById('taskDueDate').value   = dateVal  || toDateInputVal(currentDate);
+    document.getElementById('taskId').value = '';
+    document.getElementById('taskDueDate').value = dateVal || toDateInputVal(new Date());
     document.getElementById('taskStartTime').value = startTime || '';
-    document.getElementById('taskEndTime').value   = endTime  || '';
+    document.getElementById('taskEndTime').value   = endTime   || '';
+    document.getElementById('taskDeadlineTime').value = '';
+    document.getElementById('taskLocation').value  = '';
+    document.getElementById('taskDesc').value      = '';
     selectPriority('normal');
     isEditing = false;
-    document.getElementById('nameError').style.display = 'none';
+
+    // Show type toggle
+    document.getElementById('typeToggle').style.display = '';
+    document.getElementById('nameError').style.display  = 'none';
+    document.getElementById('startTimeError').style.display = 'none';
+    document.getElementById('endTimeError').style.display   = 'none';
+
+    selectType(type);
     document.getElementById('taskPopup').classList.add('active');
     setTimeout(() => document.getElementById('taskName').focus(), 80);
 }
 
-function openPopup() {
-    // Always default to today's real date, not the calendar navigation date
-    const today = new Date();
-    openPopupWithDateTime(toDateInputVal(today), '', '');
+function openPopup(type = 'task') {
+    openPopupWithDateTime(toDateInputVal(new Date()), '', '', type);
 }
 
 function openEditPopup(id) {
     const t = todos.find(x => x.id === id);
     if (!t) return;
 
-    document.getElementById('popupTitle').textContent  = 'Edit Task';
-    document.getElementById('taskId').value            = t.id;
-    document.getElementById('taskName').value          = t.text;
-    document.getElementById('taskDueDate').value       = t.date      || '';
-    document.getElementById('taskStartTime').value     = t.startTime || '';
-    document.getElementById('taskEndTime').value       = t.endTime   || '';
-    selectPriority(t.priority || 'normal');
     isEditing = true;
-    document.getElementById('nameError').style.display = 'none';
+    const type = t.type || 'task';
+
+    document.getElementById('popupTitle').textContent = type === 'event' ? 'Edit Event' : 'Edit Task';
+    document.getElementById('taskId').value           = t.id;
+    document.getElementById('taskName').value         = t.text;
+    document.getElementById('taskDueDate').value      = t.date      || '';
+    document.getElementById('taskStartTime').value    = t.startTime || '';
+    document.getElementById('taskEndTime').value      = t.endTime   || '';
+    document.getElementById('taskDeadlineTime').value = t.deadlineTime || '';
+    document.getElementById('taskLocation').value     = t.location  || '';
+    document.getElementById('taskDesc').value         = t.desc      || '';
+    selectPriority(t.priority || 'normal');
+
+    // Hide type toggle when editing
+    document.getElementById('typeToggle').style.display = 'none';
+    document.getElementById('nameError').style.display  = 'none';
+    document.getElementById('startTimeError').style.display = 'none';
+    document.getElementById('endTimeError').style.display   = 'none';
+
+    // Still apply field visibility
+    currentItemType = type;
+    document.getElementById('itemType').value = type;
+    const isEvent = type === 'event';
+    document.getElementById('taskTimeGroup').style.display  = isEvent ? 'none' : '';
+    document.getElementById('eventTimeGroup').style.display = isEvent ? '' : 'none';
+    document.getElementById('locationGroup').style.display  = isEvent ? '' : 'none';
+
     document.getElementById('taskPopup').classList.add('active');
     setTimeout(() => document.getElementById('taskName').focus(), 80);
 }
@@ -741,20 +792,43 @@ function selectPriority(p) {
 
 function handleFormSubmit(e) {
     e.preventDefault();
-    const text      = document.getElementById('taskName').value.trim();
-    const date      = document.getElementById('taskDueDate').value;
-    const startTime = document.getElementById('taskStartTime').value;
-    const endTime   = document.getElementById('taskEndTime').value;
-    const priority  = document.getElementById('taskPriority').value || 'normal';
+    const text     = document.getElementById('taskName').value.trim();
+    const date     = document.getElementById('taskDueDate').value;
+    const type     = document.getElementById('itemType').value || 'task';
+    const priority = document.getElementById('taskPriority').value || 'normal';
+    const desc     = document.getElementById('taskDesc').value.trim();
+    const location = document.getElementById('taskLocation').value.trim();
 
-    if (!text) { document.getElementById('nameError').style.display = 'block'; return; }
-    document.getElementById('nameError').style.display = 'none';
+    let startTime = '', endTime = '', deadlineTime = '';
+    let valid = true;
+
+    if (!text) {
+        document.getElementById('nameError').style.display = 'block';
+        valid = false;
+    } else {
+        document.getElementById('nameError').style.display = 'none';
+    }
+
+    if (type === 'event') {
+        startTime = document.getElementById('taskStartTime').value;
+        endTime   = document.getElementById('taskEndTime').value;
+        if (!startTime) { document.getElementById('startTimeError').style.display = 'block'; valid = false; }
+        else document.getElementById('startTimeError').style.display = 'none';
+        if (!endTime)   { document.getElementById('endTimeError').style.display = 'block'; valid = false; }
+        else document.getElementById('endTimeError').style.display = 'none';
+    } else {
+        deadlineTime = document.getElementById('taskDeadlineTime').value;
+        document.getElementById('startTimeError').style.display = 'none';
+        document.getElementById('endTimeError').style.display   = 'none';
+    }
+
+    if (!valid) return;
 
     if (isEditing) {
         const idx = todos.findIndex(t => t.id === document.getElementById('taskId').value);
-        if (idx > -1) todos[idx] = { ...todos[idx], text, date, startTime, endTime, priority };
+        if (idx > -1) todos[idx] = { ...todos[idx], text, date, type, startTime, endTime, deadlineTime, priority, desc, location };
     } else {
-        todos.push({ id: crypto.randomUUID(), text, date, startTime, endTime, priority, completed: false });
+        todos.push({ id: crypto.randomUUID(), text, date, type, startTime, endTime, deadlineTime, priority, desc, location, completed: false });
     }
 
     closePopup();

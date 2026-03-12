@@ -43,25 +43,25 @@ body.light {
 /* Someday — soft slate */
 body.light .task-chip.p-someday   { background: #e2e8f0; border-color: #94a3b8; color: #334155; }
 body.light .task-chip.p-nice      { background: #dbeafe; border-color: #60a5fa; color: #1e40af; }
-body.light .task-chip.p-normal    { background: #ffed29; border-color: #facc15; color: #713f12; }
+body.light .task-chip.p-normal    { background: #fef9c3; border-color: #facc15; color: #713f12; }
 body.light .task-chip.p-important { background: #ffedd5; border-color: #fb923c; color: #7c2d12; }
 body.light .task-chip.p-urgent    { background: #fee2e2; border-color: #f87171; color: #7f1d1d; }
 
 body.light .event-block-abs.p-someday   { background: #e2e8f0; border-color: #94a3b8; color: #334155; }
 body.light .event-block-abs.p-nice      { background: #dbeafe; border-color: #60a5fa; color: #1e40af; }
-body.light .event-block-abs.p-normal    { background: #ffed29; border-color: #facc15; color: #713f12; }
+body.light .event-block-abs.p-normal    { background: #fef9c3; border-color: #facc15; color: #713f12; }
 body.light .event-block-abs.p-important { background: #ffedd5; border-color: #fb923c; color: #7c2d12; }
 body.light .event-block-abs.p-urgent    { background: #fee2e2; border-color: #f87171; color: #7f1d1d; }
 
 body.light .month-chip.p-someday   { background: #e2e8f0; border-color: #94a3b8; color: #334155; }
 body.light .month-chip.p-nice      { background: #dbeafe; border-color: #60a5fa; color: #1e40af; }
-body.light .month-chip.p-normal    { background: #ffed29; border-color: #facc15; color: #713f12; }
+body.light .month-chip.p-normal    { background: #fef9c3; border-color: #facc15; color: #713f12; }
 body.light .month-chip.p-important { background: #ffedd5; border-color: #fb923c; color: #7c2d12; }
 body.light .month-chip.p-urgent    { background: #fee2e2; border-color: #f87171; color: #7f1d1d; }
 
 body.light .priority-badge.p-someday   { background: #e2e8f0; color: #334155; }
 body.light .priority-badge.p-nice      { background: #dbeafe; color: #1e40af; }
-body.light .priority-badge.p-normal    { background: #ffed29; color: #713f12; }
+body.light .priority-badge.p-normal    { background: #fef9c3; color: #713f12; }
 body.light .priority-badge.p-important { background: #ffedd5; color: #7c2d12; }
 body.light .priority-badge.p-urgent    { background: #fee2e2; color: #7f1d1d; }
 
@@ -1079,7 +1079,83 @@ label {
     margin-bottom: 8px;
 }
 
-.detail-actions { display: flex; gap: 10px; }
+/* Type Toggle (Task / Event) */
+.type-toggle {
+    display: flex;
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 3px;
+    gap: 3px;
+    margin-bottom: 18px;
+}
+
+.type-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: all 0.18s;
+}
+.type-btn:hover { color: var(--text); }
+.type-btn.active {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+}
+.type-btn.active.event-active {
+    background: var(--accent);
+    color: white;
+}
+
+/* Textarea */
+.form-textarea {
+    resize: vertical;
+    min-height: 72px;
+    max-height: 160px;
+    line-height: 1.5;
+}
+
+/* Event chip — dot icon instead of checkbox */
+.event-dot {
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+
+/* Task chip type badge */
+.chip-type-icon {
+    font-size: 9px;
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+
+/* List view type indicator */
+.type-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+.type-badge.type-task  { background: var(--surface2); color: var(--text-muted); }
+.type-badge.type-event { background: rgba(79,110,247,0.15); color: var(--accent); }
+
+body.light .type-badge.type-event { background: #dbeafe; color: #1e40af; }
+
+/* Location row in detail */
+.detail-location { display: flex; align-items: flex-start; gap: 7px; }
 
 /* =========================================
    Scrollbar
@@ -1133,3 +1209,15 @@ label {
     .popup-content { padding: 16px; }
     .form-row.two-col { grid-template-columns: 1fr; }
 }
+
+/* Event circle in list view */
+.task-checkbox.event-checkbox {
+    background: transparent;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    color: var(--text-muted);
+    cursor: default;
+    font-size: 8px;
+}
+
+.detail-actions { display: flex; gap: 10px; }
